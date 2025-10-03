@@ -27,10 +27,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Password salah." }, { status: 401 });
     }
 
-    // 🔹 Generate token (dummy aja untuk tes, bisa pakai JWT kalau mau)
+    // 🔹 Generate token (dummy, nanti bisa JWT)
     const token = `${user.id}-${Date.now()}`;
 
-    // 🔹 Simpan token di cookie
+    // 🔹 Buat response + set cookie
     const res = NextResponse.json({
       message: "Login berhasil",
       user: {
@@ -42,7 +42,7 @@ export async function POST(req: Request) {
 
     res.cookies.set("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: process.env.NODE_ENV === "production", // pakai true kalau di deploy
       sameSite: "strict",
       path: "/",
       maxAge: 60 * 60 * 24, // 1 hari
