@@ -1,17 +1,13 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { supabase } from "@/lib/supabaseClient";
-import { cookies } from "next/headers";
 
 export async function POST(req: Request) {
   try {
     const { username, password } = await req.json();
 
     if (!username || !password) {
-      return NextResponse.json(
-        { error: "Username dan password wajib diisi." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Username dan password wajib diisi." }, { status: 400 });
     }
 
     // 🔹 Cek user di database
@@ -31,18 +27,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Password salah." }, { status: 401 });
     }
 
-    // 🔹 Kalau sukses → set cookie token
-    cookies().set({
-      name: "token",
-      value: user.id, // bisa pakai JWT kalau mau lebih aman
-      httpOnly: true,
-      secure: true, // wajib true di https (Netlify pakai https)
-      sameSite: "strict",
-      path: "/",
-      maxAge: 60 * 60 * 24, // 1 hari
-    });
+    // 🔹 Generate token (dummy aja untuk tes, bisa pakai JWT kalau mau)
+    const token = `${user.id}-${Date.now()}`;
 
-    return NextResponse.json({
+    // 🔹 Simpan token di cookie
+    const res = NextResponse.json({
       message: "Login berhasil",
       user: {
         id: user.id,
@@ -50,6 +39,16 @@ export async function POST(req: Request) {
         created_at: user.created_at,
       },
     });
+
+    res.cookies.set("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      path: "/",
+      maxAge: 60 * 60 * 24, // 1 hari
+    });
+
+    return res;
   } catch (err) {
     console.error(err);
     return NextResponse.json({ error: "Terjadi kesalahan server." }, { status: 500 });
