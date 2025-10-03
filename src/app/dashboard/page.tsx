@@ -1,15 +1,18 @@
-"use client";
+// app/dashboard/page.tsx
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+export default async function Dashboard() {
+  const supabase = createServerComponentClient({ cookies });
 
-export default function Dashboard() {
-  const router = useRouter();
+  // cek user login
+  const { data: { user } } = await supabase.auth.getUser();
 
-  const handleLogout = async () => {
-    await fetch("/api/logout", { method: "POST" }); // hapus cookie di server
-    router.push("/login");
-  };
+  if (!user) {
+    // kalau belum login, redirect ke /login
+    redirect("/login");
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-100">
@@ -18,27 +21,29 @@ export default function Dashboard() {
         <h2 className="text-2xl font-bold mb-6">Perpustakaan</h2>
         <ul>
           <li className="mb-3 hover:text-blue-300">
-            <Link href="/dashboard">Dashboard</Link>
+            <a href="/dashboard">Dashboard</a>
           </li>
           <li className="mb-3 hover:text-blue-300">
-            <Link href="/dashboard/books">Data Buku</Link>
+            <a href="/dashboard/books">Data Buku</a>
           </li>
           <li className="mb-3 hover:text-blue-300">
-            <Link href="/dashboard/members">Data Anggota</Link>
+            <a href="/dashboard/members">Data Anggota</a>
           </li>
           <li className="mb-3 hover:text-blue-300">
-            <Link href="/dashboard/loans">Peminjaman</Link>
+            <a href="/dashboard/loans">Peminjaman</a>
           </li>
           <li className="mb-3 hover:text-blue-300">
-            <Link href="/dashboard/returns">Pengembalian</Link>
+            <a href="/dashboard/returns">Pengembalian</a>
           </li>
         </ul>
-        <button
-          onClick={handleLogout}
-          className="mt-6 bg-red-500 w-full p-2 rounded hover:bg-red-600"
-        >
-          Logout
-        </button>
+        <form action="/api/logout" method="post">
+          <button
+            type="submit"
+            className="mt-6 bg-red-500 w-full p-2 rounded hover:bg-red-600"
+          >
+            Logout
+          </button>
+        </form>
       </aside>
 
       {/* Main Content */}
@@ -49,3 +54,4 @@ export default function Dashboard() {
     </div>
   );
 }
+
