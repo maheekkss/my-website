@@ -1,14 +1,17 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { supabase } from "@/lib/supabaseClient";
-
+import { cookies } from "next/headers";
 
 export async function POST(req: Request) {
   try {
     const { username, password } = await req.json();
 
     if (!username || !password) {
-      return NextResponse.json({ error: "Username dan password wajib diisi." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Username dan password wajib diisi." },
+        { status: 400 }
+      );
     }
 
     // 🔹 Cek user di database
@@ -28,7 +31,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Password salah." }, { status: 401 });
     }
 
-    // 🔹 Kalau sukses, balikin data user
+    // 🔹 Kalau sukses → set cookie token
+    cookies().set({
+      name: "token",
+      value: user.id, // bisa pakai JWT kalau mau lebih aman
+      httpOnly: true,
+      secure: true, // wajib true di https (Netlify pakai https)
+      sameSite: "strict",
+      path: "/",
+      maxAge: 60 * 60 * 24, // 1 hari
+    });
+
     return NextResponse.json({
       message: "Login berhasil",
       user: {
